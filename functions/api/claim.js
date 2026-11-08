@@ -11,7 +11,7 @@ export async function onRequestPost({request,env}){
  try{
   await env.DB.prepare("INSERT INTO visitors (email,name) VALUES (?,?) ON CONFLICT(email) DO UPDATE SET name=CASE WHEN excluded.name <> '' THEN excluded.name ELSE visitors.name END").bind(email,name).run();
   const visitor=await env.DB.prepare('SELECT id FROM visitors WHERE email=?').bind(email).first();
-  await env.DB.prepare('INSERT INTO draws (visitor_id,hexagram_number) VALUES (?,?)').bind(visitor.id,number).run();
+  const draw=await env.DB.prepare('INSERT INTO draws (visitor_id,hexagram_number) VALUES (?,?)').bind(visitor.id,number).run();
   await env.DB.prepare('INSERT INTO consents (visitor_id,marketing_consent,policy_version) VALUES (?,?,?)').bind(visitor.id,consent?1:0,'draft-v1').run();
   return json({ok:true,report:{number:report.number,name:report.name,symbol:report.symbol,full_name:report.full_name,theme:report.theme,sections:report.sections}});
  }catch(e){console.error('Claim storage failed',String(e));return json({error:'資料儲存失敗，請稍後重試'},500)}
